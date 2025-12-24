@@ -7,13 +7,14 @@ import time
 from ollama._types import ResponseError
 import httpx
 
+from prompts import REVIEW_PROMPT
+
 Settings.llm = Ollama(model="qwen2.5-coder:3b", request_timeout=180.0)
 Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
 
 EMBED_MODEL_NAME = "nomic-embed-text"
 LLM_MODEL_NAME = "qwen2.5-coder:3b"
 PERSIST_DIR = "./data"
-
 
 def ask(query, retries=1):
     storage = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
@@ -31,7 +32,13 @@ def ask(query, retries=1):
     attempt = 0
     while True:
         try:
-            response = engine.query(query)
+            response = engine.query(f"""
+                Review Prompt:
+                {REVIEW_PROMPT}
+                
+                Instruction:
+                {query}
+            """)
             print(response)
             break
         except (httpx.ReadTimeout, ResponseError) as e:
